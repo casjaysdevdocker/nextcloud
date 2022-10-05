@@ -18,7 +18,7 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   apk update -U --no-cache \
   apk add --no-cache curl gnupg tar unzip xz \
   apk --update --no-cache add \
-  s6 \
+  s6-overlay \
   bash \
   ca-certificates \
   curl \
@@ -70,8 +70,9 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   php8-zlib \
   python3 \
   py3-pip \
-  tzdata && \
-  apk --update --no-cache add -t build-dependencies \
+  tzdata 
+
+RUN apk --update --no-cache add -t build-dependencies \
   autoconf \
   automake \
   build-base \
@@ -81,32 +82,36 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   php8-pear \
   samba-dev \
   tar \
-  wget && \
-  pip3 install --upgrade pip && \
+  wget
+
+RUN pip3 install --upgrade pip && \
   pip3 install nextcloud_news_updater && \
-  mv /etc/php8 /etc/php && ln -s /etc/php /etc/php8 && \
-  mv /etc/init.d/php-fpm8 /etc/init.d/php-fpm && ln -s /etc/init.d/php-fpm /etc/init.d/php-fpm8 && \
-  mv /etc/logrotate.d/php-fpm8 /etc/logrotate.d/php-fpm && ln -s /etc/logrotate.d/php-fpm /etc/logrotate.d/php-fpm8 && \
+  mv /etc/php8 /etc/php && \
+  ln -s /etc/php /etc/php8 && \
+  mv /etc/init.d/php-fpm8 /etc/init.d/php-fpm && \
+  ln -s /etc/init.d/php-fpm /etc/init.d/php-fpm8 && \
+  mv /etc/logrotate.d/php-fpm8 /etc/logrotate.d/php-fpm && \
+  ln -s /etc/logrotate.d/php-fpm /etc/logrotate.d/php-fpm8 && \
   mv /var/log/php8 /var/log/php && ln -s /var/log/php /var/log/php8 && \
-  ln -s /usr/sbin/php-fpm8 /usr/sbin/php-fpm && \
-  cd /tmp && \
+  ln -s /usr/sbin/php-fpm8 /usr/sbin/php-fpm
+
+RUN cd /tmp && \
   wget -q https://pecl.php.net/get/smbclient-${SMBCLIENT_VERSION}.tgz && \
-  pecl8 install smbclient-${SMBCLIENT_VERSION}.tgz && \
-  apk del build-dependencies && \
+  pecl8 install smbclient-${SMBCLIENT_VERSION}.tgz 
+
+RUN apk del build-dependencies && \
   rm -rf /tmp/* /var/www/*
 
 WORKDIR /tmp
 RUN curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" && \
   curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" && \
-  curl -SsOL "https://nextcloud.com/nextcloud.asc"
-
-RUN gpg --import "nextcloud.asc" && \
+  curl -SsOL "https://nextcloud.com/nextcloud.asc" && \
+  gpg --import "nextcloud.asc" && \
   gpg --verify --batch --no-tty "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
 
 WORKDIR /dist/nextcloud
-RUN tar -xjf "/tmp/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" --strip 1 -C . 
-
-RUN addgroup -g ${PGID} nextcloud && adduser -D -h /home/nextcloud -u ${PUID} -G nextcloud -s /bin/sh nextcloud
+RUN tar -xjf "/tmp/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" --strip 1 -C . && \
+  addgroup -g ${PGID} nextcloud && adduser -D -h /home/nextcloud -u ${PUID} -G nextcloud -s /bin/sh nextcloud
 
 RUN rm -rf /tmp/*
 
