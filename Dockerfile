@@ -23,6 +23,7 @@ RUN mkdir -p /bin/ /config/ /data/ /dist/nextcloud/ && \
   echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/testing" >> /etc/apk/repositories && \
   apk update -U --no-cache \
   apk add --no-cache \
+  openrc \
   icu-data-full \
   curl \
   gnupg \

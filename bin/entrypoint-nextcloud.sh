@@ -94,7 +94,7 @@ fi
 [ -f "/etc/.env.sh" ] && rm -Rf "/etc/.env.sh"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Additional commands
-
+[ -f "/run/openrc/softlevel" ] || openrc -n sysinit
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 case "$1" in
 --help) # Help message
@@ -102,12 +102,13 @@ case "$1" in
   echo "Usage: $APPNAME [healthcheck, bash, command]"
   echo "Failed command will have exit code 10"
   echo
-  exitCode=$?
+  exit $?
   ;;
 
 healthcheck) # Docker healthcheck
-  /usr/local/bin/healthcheck
-  exitCode=$?
+  netstat -taupln | grep -q "php-fpm" &&
+    netstat -taupln | grep -q "nginx"
+  exit $?
   ;;
 
 */bin/sh | */bin/bash | bash | shell | sh) # Launch shell
@@ -118,7 +119,8 @@ healthcheck) # Docker healthcheck
 
 *) # Execute primary command
   if [ $# -eq 0 ]; then
-    __exec_bash "/bin/bash"
+    /etc/init.d/php-fpm8 status | grep 'status: started' || /etc/init.d/php8-fpm start
+    /etc/init.d/nginx status | grep 'status: started' || /etc/init.d/nginx start
   else
     __exec_bash "/bin/bash"
   fi
