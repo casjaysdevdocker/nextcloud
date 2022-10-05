@@ -7,6 +7,7 @@ ARG LICENSE=WTFPL \
   NEXTCLOUD_VERSION=24.0.5 \
   ALPINE_VERSION=edge \
   SMBCLIENT_VERSION=1.0.6 \
+  NEXTCLOUD_UPDATE=1 \
   PGID=1000 \
   PUID=1000
 
@@ -23,8 +24,6 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   apk update -U --no-cache \
   apk add --no-cache \
   icu-data-full \
-  python3 \
-  py3-pip \
   curl \
   gnupg \
   tar \
@@ -92,7 +91,10 @@ RUN apk --update --no-cache add -t build-dependencies \
   php8-pear \
   samba-dev
 
-RUN python3 -m pip install --upgrade pip && \
+RUN apk add --no-cache \
+  python3 \
+  py3-pip \
+  python3 -m pip install --upgrade pip && \
   python3 -m pip install nextcloud_news_updater 
 
 RUN mv /etc/php8 /etc/php && \
