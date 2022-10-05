@@ -16,7 +16,7 @@ ENV SHELL=/bin/bash \
   HOSTNAME=${HOSTNAME:-casjaysdev-$IMAGE_NAME} \
   TZ=$TIMEZONE
 
-RUN mkdir -p /bin/ /config/ /data/ && \
+RUN mkdir -p /bin/ /config/ /data/ /dist/nextcloud/ && \
   rm -Rf /bin/.gitkeep /config/.gitkeep /data/.gitkeep && \
   echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/main" >> /etc/apk/repositories && \
   echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/community" >> /etc/apk/repositories && \
@@ -79,9 +79,9 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   php8-xmlwriter \
   php8-zip \
   php8-zlib \
-  tzdata
-
-RUN apk --update --no-cache add -t build-dependencies \
+  tzdata; \
+  \
+  apk --update --no-cache add -t build-dependencies \
   autoconf \
   automake \
   build-base \
@@ -89,42 +89,42 @@ RUN apk --update --no-cache add -t build-dependencies \
   pcre-dev \
   php8-dev \
   php8-pear \
-  samba-dev
-
-RUN apk add --no-cache \
+  samba-dev; \
+  \
+  apk add --no-cache \
   python3 \
-  py3-pip && \
+  py3-pip; \
   python3 -m pip install --upgrade pip && \
-  python3 -m pip install nextcloud_news_updater 
-
-RUN mv /etc/php8 /etc/php && \
+  python3 -m pip install nextcloud_news_updater; \
+  \
+  mv /etc/php8 /etc/php && \
   ln -s /etc/php /etc/php8 && \
   mv /etc/init.d/php-fpm8 /etc/init.d/php-fpm && \
   ln -s /etc/init.d/php-fpm /etc/init.d/php-fpm8 && \
   mv /etc/logrotate.d/php-fpm8 /etc/logrotate.d/php-fpm && \
   ln -s /etc/logrotate.d/php-fpm /etc/logrotate.d/php-fpm8 && \
   mv /var/log/php8 /var/log/php && ln -s /var/log/php /var/log/php8 && \
-  ln -s /usr/sbin/php-fpm8 /usr/sbin/php-fpm
-
-RUN cd /tmp && \
+  ln -s /usr/sbin/php-fpm8 /usr/sbin/php-fpm; \
+  \
+  cd /tmp && \
   wget -q https://pecl.php.net/get/smbclient-${SMBCLIENT_VERSION}.tgz && \
-  pecl8 install smbclient-${SMBCLIENT_VERSION}.tgz 
-
-RUN apk del build-dependencies && \
-  rm -rf /tmp/* /var/www/*
-
-WORKDIR /tmp
-RUN curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" && \
+  pecl8 install smbclient-${SMBCLIENT_VERSION}.tgz; \
+  \
+  apk del build-dependencies && \
+  rm -rf /tmp/* /var/www/*; \
+  \
+  RUN cd /tmp && \
+  curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" && \
   curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" && \
   curl -SsOL "https://nextcloud.com/nextcloud.asc" && \
   gpg --import "nextcloud.asc" && \
-  gpg --verify --batch --no-tty "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"
-
-WORKDIR /dist/nextcloud
-RUN tar -xjf "/tmp/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" --strip 1 -C . && \
-  addgroup -g ${PGID} nextcloud && adduser -D -h /home/nextcloud -u ${PUID} -G nextcloud -s /bin/sh nextcloud
-
-RUN rm -rf /tmp/*
+  gpg --verify --batch --no-tty "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"; \
+  \
+  cd /dist/nextcloud && \
+  tar -xjf "/tmp/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" --strip 1 -C . && \
+  addgroup -g ${PGID} nextcloud && adduser -D -h /home/nextcloud -u ${PUID} -G nextcloud -s /bin/sh nextcloud; \
+  \
+  rm -rf /tmp/*
 
 COPY ./bin/. /usr/local/bin/
 COPY ./config/. /config/
