@@ -1,12 +1,14 @@
-FROM casjaysdevdocker/alpine:latest as build
+FROM casjaysdevdocker/alpine:latest AS build
 
 ARG LICENSE=WTFPL \
   IMAGE_NAME=nextcloud \
   TIMEZONE=America/New_York \
   PORT=8000 \
   NEXTCLOUD_VERSION=24.0.5 \
-  ALPINE_VERSION=3.16 \
-  SMBCLIENT_VERSION=1.0.6
+  ALPINE_VERSION=edge \
+  SMBCLIENT_VERSION=1.0.6 \
+  PGID=1000 \
+  PUID=1000
 
 ENV SHELL=/bin/bash \
   TERM=xterm-256color \
@@ -15,6 +17,9 @@ ENV SHELL=/bin/bash \
 
 RUN mkdir -p /bin/ /config/ /data/ && \
   rm -Rf /bin/.gitkeep /config/.gitkeep /data/.gitkeep && \
+  echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/main" >> /etc/apk/repositories && \
+  echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/community" >> /etc/apk/repositories && \
+  echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/testing" >> /etc/apk/repositories && \
   apk update -U --no-cache \
   apk add --no-cache curl gnupg tar unzip xz \
   apk --update --no-cache add \
@@ -70,7 +75,7 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   php8-zlib \
   python3 \
   py3-pip \
-  tzdata 
+  tzdata
 
 RUN apk --update --no-cache add -t build-dependencies \
   autoconf \
@@ -84,8 +89,8 @@ RUN apk --update --no-cache add -t build-dependencies \
   tar \
   wget
 
-RUN pip install --upgrade pip && \
-  pip install nextcloud_news_updater 
+RUN pip3 install --upgrade pip && \
+  pip3 install nextcloud_news_updater 
 
 RUN mv /etc/php8 /etc/php && \
   ln -s /etc/php /etc/php8 && \
