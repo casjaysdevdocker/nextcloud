@@ -127,7 +127,7 @@ RUN mkdir -p /bin/ /config/ /data/ /dist/nextcloud/ && \
   rm -rf /tmp/*
 
 COPY ./bin/. /usr/local/bin/
-COPY ./config/. /config/
+COPY ./config/. /etc/
 COPY ./data/. /data/
 
 FROM scratch
