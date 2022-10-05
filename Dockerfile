@@ -21,8 +21,13 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/community" >> /etc/apk/repositories && \
   echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/testing" >> /etc/apk/repositories && \
   apk update -U --no-cache \
-  apk add --no-cache curl gnupg tar unzip xz \
-  apk --update --no-cache add \
+  apk add --no-cache \
+  icu-data-full \
+  curl \
+  gnupg \
+  tar \
+  unzip \
+  xz \
   s6-overlay \
   bash \
   ca-certificates \
@@ -85,12 +90,10 @@ RUN apk --update --no-cache add -t build-dependencies \
   pcre-dev \
   php8-dev \
   php8-pear \
-  samba-dev \
-  tar \
-  wget
+  samba-dev
 
-RUN pip3 install --upgrade pip && \
-  pip3 install nextcloud_news_updater 
+RUN python3 -m pip install --upgrade pip && \
+  python3 -m pip install nextcloud_news_updater 
 
 RUN mv /etc/php8 /etc/php && \
   ln -s /etc/php /etc/php8 && \
