@@ -114,7 +114,7 @@ RUN mkdir -p /bin/ /config/ /data/ /dist/nextcloud/ && \
   apk del build-dependencies && \
   rm -rf /tmp/* /var/www/*; \
   \
-  RUN cd /tmp && \
+  cd /tmp && \
   curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" && \
   curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" && \
   curl -SsOL "https://nextcloud.com/nextcloud.asc" && \
