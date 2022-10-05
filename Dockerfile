@@ -23,6 +23,8 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   apk update -U --no-cache \
   apk add --no-cache \
   icu-data-full \
+  python3 \
+  py3-pip \
   curl \
   gnupg \
   tar \
@@ -78,8 +80,6 @@ RUN mkdir -p /bin/ /config/ /data/ && \
   php8-xmlwriter \
   php8-zip \
   php8-zlib \
-  python3 \
-  py3-pip \
   tzdata
 
 RUN apk --update --no-cache add -t build-dependencies \
