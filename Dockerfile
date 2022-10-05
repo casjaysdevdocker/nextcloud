@@ -93,7 +93,7 @@ RUN apk --update --no-cache add -t build-dependencies \
 
 RUN apk add --no-cache \
   python3 \
-  py3-pip \
+  py3-pip && \
   python3 -m pip install --upgrade pip && \
   python3 -m pip install nextcloud_news_updater 
 
