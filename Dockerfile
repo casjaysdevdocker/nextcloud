@@ -120,7 +120,8 @@ RUN mkdir -p /bin/ /config/ /data/ /dist/nextcloud/ && \
   \
   cd /dist/nextcloud && \
   tar -xjf "/tmp/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" --strip 1 -C . && \
-  addgroup -g ${PGID} nextcloud && adduser -D -h /home/nextcloud -u ${PUID} -G nextcloud -s /bin/sh nextcloud; \
+  addgroup -g ${PGID} nextcloud && \
+  adduser -D -h /home/nextcloud -u ${PUID} -G nextcloud -s /bin/sh nextcloud; \
   \
   rm -rf /tmp/*
 
