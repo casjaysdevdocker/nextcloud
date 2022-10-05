@@ -116,10 +116,7 @@ RUN mkdir -p /bin/ /config/ /data/ /dist/nextcloud/ && \
   \
   cd /tmp && \
   curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" && \
-  curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" && \
-  curl -SsOL "https://nextcloud.com/nextcloud.asc" && \
-  gpg --import "nextcloud.asc" && \
-  gpg --verify --batch --no-tty "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc" "nextcloud-${NEXTCLOUD_VERSION}.tar.bz2"; \
+  curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc"; \
   \
   cd /dist/nextcloud && \
   tar -xjf "/tmp/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" --strip 1 -C . && \
