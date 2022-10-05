@@ -84,9 +84,10 @@ RUN apk --update --no-cache add -t build-dependencies \
   tar \
   wget
 
-RUN pip3 install --upgrade pip && \
-  pip3 install nextcloud_news_updater && \
-  mv /etc/php8 /etc/php && \
+RUN pip install --upgrade pip && \
+  pip install nextcloud_news_updater 
+
+RUN mv /etc/php8 /etc/php && \
   ln -s /etc/php /etc/php8 && \
   mv /etc/init.d/php-fpm8 /etc/init.d/php-fpm && \
   ln -s /etc/init.d/php-fpm /etc/init.d/php-fpm8 && \
