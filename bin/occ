@@ -1,0 +1,3 @@
+#!/bin/sh
+
+yasu nextcloud:nextcloud php -f /var/www/occ "$@"
