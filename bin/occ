@@ -1,3 +1,5 @@
 #!/bin/sh
-
+# Set bash options
+[ -n "$DEBUG" ] && set -x
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 yasu nextcloud:nextcloud php -f /var/www/occ "$@"
