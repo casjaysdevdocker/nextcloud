@@ -1,163 +1,97 @@
 FROM casjaysdevdocker/alpine:latest AS build
 
-ARG LICENSE=WTFPL \
-  IMAGE_NAME=nextcloud \
-  TIMEZONE=America/New_York \
-  PORT=8000 \
-  NEXTCLOUD_VERSION=24.0.5 \
-  ALPINE_VERSION=edge \
-  SMBCLIENT_VERSION=1.0.6 \
-  NEXTCLOUD_UPDATE=1 \
-  PGID=1000 \
-  PUID=1000
+ARG ALPINE_VERSION="v3.16"
 
-ENV SHELL=/bin/bash \
-  TERM=xterm-256color \
-  HOSTNAME=${HOSTNAME:-casjaysdev-$IMAGE_NAME} \
-  TZ=$TIMEZONE
+ARG DEFAULT_DATA_DIR="/usr/local/share/template-files/data" \
+  DEFAULT_CONF_DIR="/usr/local/share/template-files/config" \
+  DEFAULT_TEMPLATE_DIR="/usr/local/share/template-files/defaults"
 
-RUN mkdir -p /bin/ /config/ /data/ /dist/nextcloud/ && \
-  rm -Rf /bin/.gitkeep /config/.gitkeep /data/.gitkeep && \
-  echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/main" >> /etc/apk/repositories && \
-  echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/community" >> /etc/apk/repositories && \
-  echo "http://dl-cdn.alpinelinux.org/alpine/$ALPINE_VERSION/testing" >> /etc/apk/repositories && \
-  apk update -U --no-cache \
-  apk add --no-cache \
-  openrc \
-  icu-data-full \
-  curl \
-  gnupg \
-  tar \
-  unzip \
-  xz \
-  s6-overlay \
-  bash \
-  ca-certificates \
-  curl \
-  ffmpeg \
-  imagemagick \
-  ghostscript \
-  libsmbclient \
-  libxml2 \
-  nginx \
-  openssl \
-  php8 \
-  php8-bcmath \
-  php8-bz2 \
-  php8-cli \
-  php8-ctype \
-  php8-curl \
-  php8-dom \
-  php8-exif \
-  php8-fileinfo \
-  php8-fpm \
-  php8-ftp \
-  php8-gd \
-  php8-gmp \
-  php8-iconv \
-  php8-intl \
-  php8-json \
-  php8-ldap \
-  php8-mbstring \
-  php8-opcache \
-  php8-openssl \
-  php8-pcntl \
-  php8-pecl-apcu \
-  php8-pecl-imagick \
-  php8-pecl-mcrypt \
-  php8-pecl-memcached \
-  php8-pdo \
-  php8-pdo_mysql \
-  php8-pdo_pgsql \
-  php8-pdo_sqlite \
-  php8-posix \
-  php8-redis \
-  php8-session \
-  php8-simplexml \
-  php8-sqlite3 \
-  php8-xml \
-  php8-xmlreader \
-  php8-xmlwriter \
-  php8-zip \
-  php8-zlib \
-  tzdata; \
-  \
-  apk --update --no-cache add -t build-dependencies \
-  autoconf \
-  automake \
-  build-base \
-  libtool \
-  pcre-dev \
-  php8-dev \
-  php8-pear \
-  samba-dev; \
-  \
-  apk add --no-cache \
-  python3 \
-  py3-pip; \
-  python3 -m pip install --upgrade pip && \
-  python3 -m pip install nextcloud_news_updater; \
-  \
-  mv /etc/php8 /etc/php && \
-  ln -s /etc/php /etc/php8 && \
-  mv /etc/init.d/php-fpm8 /etc/init.d/php-fpm && \
-  ln -s /etc/init.d/php-fpm /etc/init.d/php-fpm8 && \
-  mv /etc/logrotate.d/php-fpm8 /etc/logrotate.d/php-fpm && \
-  ln -s /etc/logrotate.d/php-fpm /etc/logrotate.d/php-fpm8 && \
-  mv /var/log/php8 /var/log/php && ln -s /var/log/php /var/log/php8 && \
-  ln -s /usr/sbin/php-fpm8 /usr/sbin/php-fpm; \
-  \
-  cd /tmp && \
-  wget -q https://pecl.php.net/get/smbclient-${SMBCLIENT_VERSION}.tgz && \
-  pecl8 install smbclient-${SMBCLIENT_VERSION}.tgz; \
-  \
-  apk del build-dependencies && \
-  rm -rf /tmp/* /var/www/*; \
-  \
-  cd /tmp && \
-  curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" && \
-  curl -SsOL "https://download.nextcloud.com/server/releases/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2.asc"; \
-  \
-  cd /dist/nextcloud && \
-  tar -xjf "/tmp/nextcloud-${NEXTCLOUD_VERSION}.tar.bz2" --strip 1 -C . && \
-  addgroup -g ${PGID} nextcloud && \
-  adduser -D -h /home/nextcloud -u ${PUID} -G nextcloud -s /bin/sh nextcloud; \
-  \
-  rm -rf /tmp/*
+ARG PACK_LIST="bash"
 
-COPY ./bin/. /usr/local/bin/
-COPY ./config/. /etc/
-COPY ./data/. /data/
+ENV LANG=en_US.UTF-8 \
+  ENV=ENV=~/.bashrc \
+  TZ="America/New_York" \
+  SHELL="/bin/sh" \
+  TERM="xterm-256color" \
+  TIMEZONE="${TZ:-$TIMEZONE}" \
+  HOSTNAME="casjaysdev-nextcloud"
+
+COPY ./rootfs/. /
+
+RUN set -ex; \
+  rm -Rf "/etc/apk/repositories"; \
+  mkdir -p "${DEFAULT_DATA_DIR}" "${DEFAULT_CONF_DIR}" "${DEFAULT_TEMPLATE_DIR}"; \
+  echo "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/main" >>"/etc/apk/repositories"; \
+  echo "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/community" >>"/etc/apk/repositories"; \
+  if [ "${ALPINE_VERSION}" = "edge" ]; then echo "http://dl-cdn.alpinelinux.org/alpine/${ALPINE_VERSION}/testing" >>"/etc/apk/repositories" ; fi ; \
+  apk update --update-cache && apk add --no-cache ${PACK_LIST} && \
+  echo
+
+RUN echo 'Running cleanup' ; \
+  rm -Rf /usr/share/doc/* /usr/share/info/* /tmp/* /var/tmp/* ; \
+  rm -Rf /usr/local/bin/.gitkeep /usr/local/bin/.gitkeep /config /data /var/cache/apk/* ; \
+  rm -rf /lib/systemd/system/multi-user.target.wants/* ; \
+  rm -rf /etc/systemd/system/*.wants/* ; \
+  rm -rf /lib/systemd/system/local-fs.target.wants/* ; \
+  rm -rf /lib/systemd/system/sockets.target.wants/*udev* ; \
+  rm -rf /lib/systemd/system/sockets.target.wants/*initctl* ; \
+  rm -rf /lib/systemd/system/sysinit.target.wants/systemd-tmpfiles-setup* ; \
+  rm -rf /lib/systemd/system/systemd-update-utmp* ; \
+  if [ -d "/lib/systemd/system/sysinit.target.wants" ]; then cd "/lib/systemd/system/sysinit.target.wants" && rm $(ls | grep -v systemd-tmpfiles-setup) ; fi
 
 FROM scratch
-ARG BUILD_DATE="$(date +'%Y-%m-%d %H:%M')"
 
-LABEL org.label-schema.name="nextcloud" \
-  org.label-schema.description="Containerized version of nextcloud" \
-  org.label-schema.url="https://hub.docker.com/r/casjaysdevdocker/nextcloud" \
-  org.label-schema.vcs-url="https://github.com/casjaysdevdocker/nextcloud" \
-  org.label-schema.build-date=$BUILD_DATE \
-  org.label-schema.version=$BUILD_DATE \
-  org.label-schema.vcs-ref=$BUILD_DATE \
-  org.label-schema.license="$LICENSE" \
-  org.label-schema.vcs-type="Git" \
-  org.label-schema.schema-version="latest" \
-  org.label-schema.vendor="CasjaysDev" \
-  maintainer="CasjaysDev <docker-admin@casjaysdev.com>"
+ARG \
+  SERVICE_PORT="80" \
+  EXPOSE_PORTS="80" \
+  PHP_SERVER="nextcloud" \
+  NODE_VERSION="system" \
+  NODE_MANAGER="system" \
+  BUILD_VERSION="latest" \
+  LICENSE="MIT" \
+  IMAGE_NAME="nextcloud" \
+  BUILD_DATE="Sun Nov 13 12:17:42 PM EST 2022" \
+  TIMEZONE="America/New_York"
 
-ENV SHELL="/bin/bash" \
+LABEL maintainer="CasjaysDev <docker-admin@casjaysdev.com>" \
+  org.opencontainers.image.vendor="CasjaysDev" \
+  org.opencontainers.image.authors="CasjaysDev" \
+  org.opencontainers.image.vcs-type="Git" \
+  org.opencontainers.image.name="${IMAGE_NAME}" \
+  org.opencontainers.image.base.name="${IMAGE_NAME}" \
+  org.opencontainers.image.license="${LICENSE}" \
+  org.opencontainers.image.vcs-ref="${BUILD_VERSION}" \
+  org.opencontainers.image.build-date="${BUILD_DATE}" \
+  org.opencontainers.image.version="${BUILD_VERSION}" \
+  org.opencontainers.image.schema-version="${BUILD_VERSION}" \
+  org.opencontainers.image.url="https://hub.docker.com/r/casjaysdevdocker/${IMAGE_NAME}" \
+  org.opencontainers.image.vcs-url="https://github.com/casjaysdevdocker/${IMAGE_NAME}" \
+  org.opencontainers.image.url.source="https://github.com/casjaysdevdocker/${IMAGE_NAME}" \
+  org.opencontainers.image.documentation="https://hub.docker.com/r/casjaysdevdocker/${IMAGE_NAME}" \
+  org.opencontainers.image.description="Containerized version of ${IMAGE_NAME}" \
+  com.github.containers.toolbox="false"
+
+ENV LANG=en_US.UTF-8 \
+  ENV=~/.bashrc \
+  SHELL="/bin/bash" \
+  PORT="${SERVICE_PORT}" \
   TERM="xterm-256color" \
-  HOSTNAME="casjaysdev-nextcloud" \
-  TZ="${TZ:-America/New_York}"
-
-WORKDIR /root
-
-VOLUME ["/root","/config","/data"]
-
-EXPOSE $PORT
+  PHP_SERVER="${PHP_SERVER}" \
+  CONTAINER_NAME="${IMAGE_NAME}" \
+  TZ="${TZ:-America/New_York}" \
+  TIMEZONE="${TZ:-$TIMEZONE}" \
+  HOSTNAME="casjaysdev-${IMAGE_NAME}"
 
 COPY --from=build /. /
 
-ENTRYPOINT [ "tini", "--" ]
-HEALTHCHECK --interval=15s --timeout=3s CMD [ "/usr/local/bin/entrypoint-nextcloud.sh", "healthcheck" ]
-CMD [ "/usr/local/bin/entrypoint-nextcloud.sh" ]
+USER root
+WORKDIR /root
+
+VOLUME [ "/config","/data" ]
+
+EXPOSE $EXPOSE_PORTS
+
+#CMD [ "" ]
+ENTRYPOINT [ "tini", "-p", "SIGTERM", "--", "/usr/local/bin/entrypoint.sh" ]
+HEALTHCHECK --start-period=1m --interval=2m --timeout=3s CMD [ "/usr/local/bin/entrypoint.sh", "healthcheck" ]
+
