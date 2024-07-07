@@ -157,6 +157,7 @@ RUN \
   set -ex; \
   pkmgr clean; \
   rm -Rf "/config" "/data"; \
+  rm -Rf /usr/local/etc/docker/init.d/zz-nginx.sh; \
   rm -rf /etc/systemd/system/*.wants/*; \
   rm -rf /lib/systemd/system/systemd-update-utmp*; \
   rm -rf /lib/systemd/system/anaconda.target.wants/*; \
