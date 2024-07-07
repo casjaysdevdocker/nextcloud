@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+##@Version           :  202407071518-git
+# @@Author           :  Jason Hempstead
+# @@Contact          :  git-admin@casjaysdev.pro
+# @@License          :  LICENSE.md
+# @@ReadME           :  template --help
+# @@Copyright        :  Copyright: (c) 2024 Jason Hempstead, Casjays Developments
+# @@Created          :  Sunday, Jul 07, 2024 15:18 EDT
+# @@File             :  template
+# @@Description      :  newScript
+# @@Changelog        :  newScript
+# @@TODO             :  Refactor code
+# @@Other            :
+# @@Resource         :
+# @@Terminal App     :  no
+# @@sudo/root        :  no
+# @@Template         :  bash/system
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# shell check options
+# shellcheck disable=SC2317
+# shellcheck disable=SC2120
+# shellcheck disable=SC2155
+# shellcheck disable=SC2199
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+APPNAME="$(basename "$0")"
+VERSION="202407071518-git"
+HOME="${USER_HOME:-$HOME}"
+USER="${SUDO_USER:-$USER}"
+RUN_USER="${SUDO_USER:-$USER}"
+SRC_DIR="${BASH_SOURCE%/*}"
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Set bash options
+set -o pipefail
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Create functions
+__docker_run() {
+  docker run \
+    --init \
+    --sig-proxy=false \
+    --name nextcloud \
+    --restart always \
+    --publish 80:8080 \
+    --env TALK_PORT=3478 \
+    --env HOSTNAME=nextcloud \
+    --env NEXTCLOUD_ADDITIONAL_APKS="imagemagick " \
+    --env NEXTCLOUD_DATADIR="/data/nextcloud" \
+    --volume /config/nextcloud:/mnt/docker-aio-config \
+    --volume /var/run/docker.sock:/var/run/docker.sock:ro \
+    nextcloud/all-in-one:latest
+  return $?
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+__docker_cron() {
+  local retVal=0
+  [ -f "/run/nextcloud-cron.pid" ] && return || touch /run/nextcloud-cron.pid
+  docker rm -f nextcloud && docker pull nextcloud/all-in-one:latest && __docker_run
+  retval=$?
+  rm -Rf /run/nextcloud-cron.pid
+  return $retval
+}
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Create directories
+[ -d "/data/nextcloud" ] || mkdir -p /data/nextcloud
+[ -d "/config/nextcloud" ] || mkdir -p /config/nextcloud
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+case "$1" in
+cron)
+  __docker_cron
+  exit $?
+  ;;
+*)
+  (sleep 86400 && __docker_cron) &
+  __docker_run &
+  dockerPid=$!
+  ;;
+esac
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+wait -f $dockerPid
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
