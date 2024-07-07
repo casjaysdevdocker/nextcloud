@@ -46,6 +46,7 @@ __docker_run() {
     --env HOSTNAME=nextcloud \
     --env NEXTCLOUD_ADDITIONAL_APKS="imagemagick " \
     --env NEXTCLOUD_DATADIR="/data/nextcloud" \
+    --volume /data/nextcloud:/data/nextcloud \
     --volume /config/nextcloud:/mnt/docker-aio-config \
     --volume /var/run/docker.sock:/var/run/docker.sock:ro \
     nextcloud/all-in-one:latest
